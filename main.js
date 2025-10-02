@@ -1,18 +1,26 @@
 // --- CONSTANTS ---
-        const FOCUS_TIME_MINUTES = 25;
-        const BREAK_TIME_MINUTES = 25;
-        const LONG_BREAK_TIME_MINUTES = 15;
-        
-        // Convert to seconds
-        const FOCUS_TIME = FOCUS_TIME_MINUTES * 60;
-        const BREAK_TIME = BREAK_TIME_MINUTES * 60;
-        const LONG_BREAK_TIME = LONG_BREAK_TIME_MINUTES * 60;
+        // TEMPORARY CHANGE FOR QUICK TESTING: Setting to 5 seconds
+        const FOCUS_TIME_MINUTES = 0.08; // Roughly 5 seconds for testing
+        const BREAK_TIME_MINUTES = 0.08; // Roughly 5 seconds for testing
+        const LONG_BREAK_TIME_MINUTES = 0.25; // Roughly 15 seconds for testing
 
+        // Convert to seconds
+        const FOCUS_TIME = Math.round(FOCUS_TIME_MINUTES * 60);
+        const BREAK_TIME = Math.round(BREAK_TIME_MINUTES * 60);
+        const LONG_BREAK_TIME = Math.round(LONG_BREAK_TIME_MINUTES * 60);
+
+        // --- DOM ELEMENTS ---
         const timeDisplay = document.getElementById('time-display');
         const timerStatus = document.getElementById('timer-status');
         const startBtn = document.getElementById('start-btn');
         const pauseBtn = document.getElementById('pause-btn');
         const resetBtn = document.getElementById('reset-btn');
+
+        // DOM ELEMENTS FOR BUILD 3 (Breathing Guide)
+        const timerDisplaySection = document.querySelector('.time-display').parentElement.parentElement;
+        const breathingSection = document.getElementById('breathing-section');
+        const breathingGuide = document.getElementById('breathing-guide');
+        const breathingInstruction = document.getElementById('breathing-instruction');
 
         // --- STATE VARIABLES ---
         let currentTime = FOCUS_TIME;
@@ -20,6 +28,43 @@
         let timerInterval = null;
         let currentPhase = 'Focus'; // 'Focus', 'Break', 'LongBreak'
         let focusSessionCount = 0;
+
+        // --- BUILD 3: ANIMATION LOGIC ---
+
+        /**
+         * Starts the visual breathing guide animation and updates instructions.
+         */
+        function startBreathingGuide() {
+            // 1. Hide the time display
+            timerDisplaySection.classList.add('hidden');
+            
+            // 2. Show the breathing guide elements
+            breathingSection.classList.remove('hidden');
+            breathingGuide.classList.remove('hidden');
+            breathingInstruction.classList.remove('hidden');
+            
+            // 3. Start the animation (uses CSS keyframes)
+            breathingGuide.classList.add('breathing-active');
+            
+            // 4. Update the instruction text
+            breathingInstruction.textContent = "Breathe In (2s) - Breathe Out (2s)";
+        }
+
+        /**
+         * Stops the visual breathing guide animation and resets display.
+         */
+        function stopBreathingGuide() {
+            // 1. Show the time display
+            timerDisplaySection.classList.remove('hidden');
+
+            // 2. Hide the breathing guide elements
+            breathingSection.classList.add('hidden');
+            breathingGuide.classList.add('hidden');
+            breathingInstruction.classList.add('hidden');
+
+            // 3. Stop the animation
+            breathingGuide.classList.remove('breathing-active');
+        }
 
         // --- HELPER FUNCTIONS ---
 
@@ -71,14 +116,23 @@
                     startBtn.textContent = 'Start Short Break';
                 }
                 
-                // Trigger a notification or chat message (Build 4 will enhance this)
-                // NOTE: Using a custom alert for better UX instead of window.alert()
-                showCustomMessage(`Time for your ${currentPhase}! You earned it.`);
+                // BUILD 3 INTEGRATION: Show breathing guide during breaks
+                startBreathingGuide();
+                
+                // Trigger a chat message
+                showCustomMessage(`Time for your ${currentPhase}! Close your books and follow the breathing guide to reset your focus.`);
 
             } else { // It was a Break or LongBreak, so return to Focus
                 currentPhase = 'Focus';
                 currentTime = FOCUS_TIME;
                 startBtn.textContent = 'Start Focus';
+                
+                // BUILD 3 INTEGRATION: Hide breathing guide for focus time
+                stopBreathingGuide();
+                
+                // Trigger a chat message
+                showCustomMessage(`Break is over! Time to crush this next Focus Session. Good luck!`);
+
                 // If it was a LongBreak, the counter resets implicitly with the next Focus session.
             }
             
@@ -96,14 +150,12 @@
             messageElement.className = 'chat-message-ai';
             messageElement.innerHTML = `
                 <div class="ai-bubble" style="background-color: #f0fdf4; color: #15803d; border: 1px solid #dcfce7;">
-                    <p class="font-semibold">ALERT</p>
+                    <p class="font-semibold">Coach AI</p>
                     <p>${message}</p>
                 </div>
             `;
             chatWindow.appendChild(messageElement);
             chatWindow.scrollTop = chatWindow.scrollHeight; // Scroll to bottom
-            
-            // Optional: You could add a delay here to show a modal for a few seconds instead of just a chat message
         }
 
         // --- CORE TIMER LOGIC ---
@@ -117,6 +169,14 @@
             isRunning = true;
             startBtn.classList.add('hidden');
             pauseBtn.classList.remove('hidden');
+            
+            // BUILD 3 INTEGRATION: Ensure breathing guide is hidden if starting Focus
+            if (currentPhase === 'Focus') {
+                stopBreathingGuide();
+            } else {
+                // If resuming a break, make sure the guide is visible
+                startBreathingGuide();
+            }
 
             timerInterval = setInterval(() => {
                 currentTime--;
@@ -139,6 +199,12 @@
             startBtn.classList.remove('hidden');
             pauseBtn.classList.add('hidden');
             startBtn.textContent = `Resume ${currentPhase}`;
+            
+            // BUILD 3 INTEGRATION: Pause or stop the animation when paused
+            if (currentPhase !== 'Focus') {
+                breathingGuide.classList.remove('breathing-active');
+                breathingInstruction.textContent = "Paused. Click Resume to continue breathing.";
+            }
         }
 
         /**
@@ -153,6 +219,10 @@
             pauseBtn.classList.add('hidden');
             startBtn.classList.remove('hidden');
             timerStatus.textContent = 'Ready to Start Focus Session';
+            
+            // BUILD 3 INTEGRATION: Hide guide on reset
+            stopBreathingGuide();
+
             updateDisplay();
         }
 
@@ -164,3 +234,5 @@
         // --- INITIALIZATION ---
         // Set initial display when the page loads
         updateDisplay();
+        // Ensure breathing guide is hidden at start
+        stopBreathingGuide();
