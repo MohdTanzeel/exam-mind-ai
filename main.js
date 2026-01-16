@@ -1,8 +1,8 @@
 // --- CONSTANTS ---
-        // TEMPORARY CHANGE FOR QUICK TESTING: Setting to 5 seconds
-        const FOCUS_TIME_MINUTES = 0.08; // Roughly 5 seconds for testing
-        const BREAK_TIME_MINUTES = 0.08; // Roughly 5 seconds for testing
-        const LONG_BREAK_TIME_MINUTES = 0.25; // Roughly 15 seconds for testing
+        
+        const FOCUS_TIME_MINUTES = 25; // 25 minutes
+        const BREAK_TIME_MINUTES = 5; // 5 minutes
+        const LONG_BREAK_TIME_MINUTES = 15; // 15 minutes
 
         // Convert to seconds
         const FOCUS_TIME = Math.round(FOCUS_TIME_MINUTES * 60);
